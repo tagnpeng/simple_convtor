@@ -6,13 +6,21 @@
     <vendor email="tangpengzy@163.com">simple</vendor>
 
     <description><![CDATA[
-    用于自动转换实体<br>
-    支持ArrayList,原生数组的嵌套转换<br>
-    只需定义好方法出参入参,其余的交给插件吧!<br>
-    MacOs默认快捷键为command + shift + L<br>
-    Win默认快捷键为ctrl shift L<br>
-    将光标移动到对应方法方法体中,按下快捷键开始
-  ]]></description>
+      用于实体装换插件,支持ArrayList。
+      <br/>
+      <br/>
+
+
+      <br/>
+      <b>介绍</b>
+      <ul>
+          <li>Just define a good method to enter and leave the rest to the plugin!
+The default shortcut key for MacOs is command + shift + L
+The default shortcut keys for Windows are ctrl, shift and L
+Move the cursor to the corresponding method body and press the shortcut key to start</li>
+      </ul>
+
+    ]]></description>
 
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.lang</depends>

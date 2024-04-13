@@ -5,7 +5,6 @@ open class TargetClass {
      * 类型 LIST or OBJECT
      */
     var type: String? = null
-
     /**
      * 类名
      */

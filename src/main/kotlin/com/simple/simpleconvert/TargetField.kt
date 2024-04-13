@@ -8,12 +8,10 @@ class TargetField {
      * 类型
      */
     var type: String? = null
-
     /**
      * 属性名称
      */
     var fieldName: String? = null
-
     /**
      * 方法字符
      */
