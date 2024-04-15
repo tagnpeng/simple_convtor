@@ -2,6 +2,7 @@ package com.simple.demo5
 
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.psi.PsiElementFactory
+import com.simple.simpleconvert.SimpleUtil
 import java.util.stream.Collectors
 
 class CreateMethod {

@@ -1,4 +1,4 @@
-package com.simple.demo5
+package com.simple.simpleconvert
 
 import com.intellij.openapi.project.Project
 import com.intellij.psi.*
@@ -15,14 +15,14 @@ class SimpleUtil {
         const val BASE: String = "BASE"
 
         fun getType(psiType: PsiType): String {
-            if (isBaseType(psiType)) {
-                return BASE
-            }
             if (isCollection(psiType)) {
-                return Companion.COLLECT
+                return COLLECT
             }
             if (isArray(psiType)) {
                 return ARR
+            }
+            if (isBaseType(psiType)) {
+                return BASE
             }
             return OBJECT
         }
@@ -45,7 +45,7 @@ class SimpleUtil {
          * @param psiElement
          * @return
          */
-        fun isStaticField(psiElement: PsiElement?): Boolean {
+        private fun isStaticField(psiElement: PsiElement?): Boolean {
             var result = false
             if (isPsiFieldOrMethodOrClass(psiElement)) {
                 if (psiElement is PsiField) {
@@ -63,7 +63,7 @@ class SimpleUtil {
          * @param psiElement
          * @return
          */
-        fun isStaticMethod(psiElement: PsiElement?): Boolean {
+        private fun isStaticMethod(psiElement: PsiElement?): Boolean {
             var result = false
             if (isPsiFieldOrMethodOrClass(psiElement)) {
                 if (psiElement is PsiMethod) {
@@ -112,13 +112,6 @@ class SimpleUtil {
 
         private fun isBaseType(psiType: PsiType): Boolean {
             val canonicalText = psiType.canonicalText
-            val psiClass = PsiUtil.resolveClassInType(psiType)
-            if (isJavaStandardClass(psiClass!!.project, psiClass)) {
-                return true;
-            }
-            if (psiClass.isEnum) {
-                return true
-            }
             //基本类型  boolean
             if (PsiTypes.booleanType() == psiType || "java.lang.Boolean" == canonicalText) {
                 return true
@@ -163,121 +156,34 @@ class SimpleUtil {
             if ("java.lang.Object" == canonicalText) {
                 return true
             }
-            return false
-        }
-
-        fun isCollection(psiType: PsiType): Boolean {
-            val result = " "
-            val canonicalText = psiType.canonicalText
-            //常见的List 和Map
-            if (canonicalText.startsWith("java.util.")) {
-                if (canonicalText.contains("Map")) {
-                    return true
-                }
-                if (canonicalText.contains("List")) {
-                    return true
-                }
+            val psiClass = PsiUtil.resolveClassInType(psiType)
+            if (isJavaStandardClass(psiClass!!.project, psiClass)) {
+                return true
             }
-            return false
-        }
-
-        fun isArray(psiType: PsiType): Boolean {
-            val result = " "
-            val canonicalText = psiType.canonicalText
-            //原生的数组
-            if (canonicalText.contains("[]")) {
+            if (psiClass.isEnum) {
                 return true
             }
             return false
         }
 
-        /**
-         * 构造ognl 的默认值
-         *
-         * @param psiType
-         * @return
-         */
-        fun getDefaultString(psiType: PsiType): String {
-            var result = " "
+        private fun isCollection(psiType: PsiType): Boolean {
             val canonicalText = psiType.canonicalText
-
-            //基本类型  boolean
-            if (PsiTypes.booleanType() == psiType || "java.lang.Boolean" == canonicalText) {
-                result = "true"
-                return result
-            }
-
-            //基本类型  String
-            if (canonicalText.endsWith("java.lang.String")) {
-                result = "\" \""
-                return result
-            }
-
-            if (PsiTypes.longType() == psiType || "java.lang.Long" == canonicalText) {
-                result = "0L"
-                return result
-            }
-
-            if (PsiTypes.doubleType() == psiType || "java.lang.Double" == canonicalText) {
-                result = "0D"
-                return result
-            }
-
-            if (PsiTypes.floatType() == psiType || "java.lang.Float" == canonicalText) {
-                result = "0F"
-                return result
-            }
-
-            //基本类型  数字
-            if (PsiTypes.intType() == psiType || "java.lang.Integer" == canonicalText || PsiTypes.byteType() == psiType || "java.lang.Byte" == canonicalText || PsiTypes.shortType() == psiType || "java.lang.Short" == canonicalText) {
-                result = "0"
-                return result
-            }
-
-
-            //Class xx 特殊class 字段的判断
-            //java.lang.Class
-            if ("java.lang.Class" == canonicalText) {
-                result = "@java.lang.Object@class"
-                return result
-            }
-            //Class<XXX> x
-            //java.lang.Class<com.wangji92.arthas.plugin.demo.controller.user>
-            if (canonicalText.startsWith("java.lang.Class")) {
-                result =
-                    "@" + canonicalText.substring(canonicalText.indexOf("<") + 1, canonicalText.length - 1) + "@class"
-                return result
-            }
-
-
             //常见的List 和Map
             if (canonicalText.startsWith("java.util.")) {
                 if (canonicalText.contains("Map")) {
-                    result = "#{\" \": null }"
-                    return result
+                    return true
                 }
                 if (canonicalText.contains("List")) {
-                    result = "{}"
-                    return result
+                    return true
                 }
             }
+            return false
+        }
 
-            //...
-            if (psiType is PsiEllipsisType) {
-                val arrayCanonicalText = psiType.deepComponentType.canonicalText
-                return "new $arrayCanonicalText[]{}"
-            }
-
+        private fun isArray(psiType: PsiType): Boolean {
+            val canonicalText = psiType.canonicalText
             //原生的数组
-            if (canonicalText.contains("[]")) {
-                result = "new $canonicalText{}"
-                return result
-            }
-
-
-            //不管他的构造函数了，太麻烦了
-            result = "new $canonicalText()"
-            return result
+            return canonicalText.contains("[]")
         }
     }
 }
