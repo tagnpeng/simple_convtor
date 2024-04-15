@@ -1,6 +1,11 @@
 package com.simple.demo5
 
+import com.intellij.openapi.project.Project
 import com.intellij.psi.*
+import com.intellij.psi.search.GlobalSearchScope
+import com.intellij.psi.search.PsiShortNamesCache
+import com.intellij.psi.util.PsiUtil
+
 
 class SimpleUtil {
     companion object {
@@ -80,8 +85,40 @@ class SimpleUtil {
             return psiElement is PsiField || psiElement is PsiClass || psiElement is PsiMethod || psiElement is PsiJavaFile
         }
 
+        /**
+         * 判断类是否来自jdk
+         *
+         * @param [project] project
+         * @param [psiClass] 类
+         * @return [Boolean] 是否来自jdk
+         */
+        private fun isJavaStandardClass(project: Project, psiClass: PsiClass): Boolean {
+            // 获取类名
+            val className = psiClass.name
+                ?: return false // 如果类名为空，则无法判断
+            // 获取全局搜索范围
+            val scope = GlobalSearchScope.allScope(project)
+            // 检查类是否在 Java SDK 中
+            val classes = PsiShortNamesCache.getInstance(project).getClassesByName(className, scope)
+            for (foundClass in classes) {
+                // 判断是否来自 JDK
+                val classLocation = foundClass.containingFile.virtualFile.path
+                if (classLocation.contains("jdk") || classLocation.contains("java.base")) {
+                    return true // 如果类来自 JDK，则认为是 Java 标准库中的类
+                }
+            }
+            return false // 如果类不来自 JDK，则认为不是 Java 标准库中的类
+        }
+
         private fun isBaseType(psiType: PsiType): Boolean {
             val canonicalText = psiType.canonicalText
+            val psiClass = PsiUtil.resolveClassInType(psiType)
+            if (isJavaStandardClass(psiClass!!.project, psiClass)) {
+                return true;
+            }
+            if (psiClass.isEnum) {
+                return true
+            }
             //基本类型  boolean
             if (PsiTypes.booleanType() == psiType || "java.lang.Boolean" == canonicalText) {
                 return true

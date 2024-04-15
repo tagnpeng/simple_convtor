@@ -115,7 +115,12 @@ open class CustomizeCreateTargetInfo {
             if (supers.isNotEmpty()) {
                 for (aSuper in supers) {
                     //todo 可以提取特征将不需要管的超类过滤
-                    if (aSuper.name == "DTO" || aSuper.name == "Serializable" || aSuper.name == "Object" || aSuper.name == "BigDecimal") {
+                    if (aSuper.name == "DTO"
+                        || aSuper.name == "Serializable"
+                        || aSuper.name == "Object"
+                        || aSuper.name == "BigDecimal"
+                        || aSuper.name == "Enum"
+                    ) {
                         continue
                     }
                     psiClassFields.addAll(Stream.of(*aSuper.fields).collect(Collectors.toList()))
@@ -136,10 +141,7 @@ open class CustomizeCreateTargetInfo {
                 val fieldPsiClass = PsiUtil.resolveClassInType(psiType)
                 val type = SimpleUtil.getType(psiType)
                 if (!methods.containsKey(psiField.name)) {
-                    Messages.showErrorDialog(
-                        psiClass.name + "." + psiField.name + typeStr + "方法命名不支持",
-                        "错误提示"
-                    )
+                    throw Exception(psiClass.name + "." + psiField.name + typeStr + "方法命名不支持")
                 }
                 field.method = methods[psiField.name]
                 field.type = type
