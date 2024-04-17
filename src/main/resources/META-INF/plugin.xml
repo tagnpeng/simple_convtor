@@ -6,18 +6,13 @@
     <vendor email="tangpengzy@163.com">simple</vendor>
 
     <description><![CDATA[
-      用于实体装换插件,支持ArrayList。
+      Automatic entity conversion.
       <br/>
-      <br/>
-
-
-      <br/>
-      <b>介绍</b>
+      <b>introduction</b>
       <ul>
-          <li>Just define a good method to enter and leave the rest to the plugin!
-The default shortcut key for MacOs is command + shift + L
-The default shortcut keys for Windows are ctrl, shift and L
-Move the cursor to the corresponding method body and press the shortcut key to start</li>
+        <li>Automatically convert various entities, such as from DO to VO, supporting arrays and multi-level nested objects. You only need to define the methods properly. Move the cursor to the method class and press a shortcut key to complete everything.</li>
+        <li>The default shortcut key for MacOs is command + shift + L</li>
+        <li>The default shortcut keys for Windows are ctrl, shift and L</li>
       </ul>
 
     ]]></description>
