@@ -90,7 +90,9 @@ open class CustomizeCreateTargetInfo {
                     }
                 }
             }
-            val targetClass = getTargetClass(paramPsiClass!!, TargetClass(), "get")
+            val clazz = TargetClass()
+            clazz.paramName = enterPsiType[0].name
+            val targetClass = getTargetClass(paramPsiClass!!, clazz, "get")
             targetClass.type = paramType
             return targetClass
         }
@@ -107,8 +109,10 @@ open class CustomizeCreateTargetInfo {
             val psiClassFields = Stream.of(*psiClass.fields).collect(Collectors.toList())
             //拿到当前类名称
             aClass.className = psiClass.name
-            aClass.paramName =
-                aClass.className?.substring(0, 1)!!.lowercase(Locale.getDefault()) + aClass.className!!.substring(1)
+            if (aClass.paramName == null) {
+                aClass.paramName =
+                    aClass.className?.substring(0, 1)!!.lowercase(Locale.getDefault()) + aClass.className!!.substring(1)
+            }
 
             //判断当前类是否还有超类
             val supers = psiClass.supers
