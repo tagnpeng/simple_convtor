@@ -110,7 +110,7 @@ class SimpleUtil {
             return false // 如果类不来自 JDK，则认为不是 Java 标准库中的类
         }
 
-        private fun isBaseType(psiType: PsiType): Boolean {
+        fun isBaseType(psiType: PsiType): Boolean {
             val canonicalText = psiType.canonicalText
             //基本类型  boolean
             if (PsiTypes.booleanType() == psiType || "java.lang.Boolean" == canonicalText) {
@@ -184,6 +184,39 @@ class SimpleUtil {
             val canonicalText = psiType.canonicalText
             //原生的数组
             return canonicalText.contains("[]")
+        }
+
+        val baseTextMap = mapOf(
+            "java.lang.Boolean" to 1,
+            "java.lang.String" to 1,
+            "java.lang.Long" to 1,
+            "java.lang.Double" to 1,
+            "java.lang.Float" to 1,
+            "java.lang.Integer" to 1,
+            "java.lang.Byte" to 1,
+            "java.lang.Short" to 1,
+            "java.lang.Class" to 1,
+            "java.math.BigDecimal" to 1,
+            "java.util.Date" to 1,
+            "java.lang.Object" to 1,
+            "java.time.LocalDateTime" to 1,
+        )
+
+        fun isBaseTypeV2(psiType: PsiType): Boolean {
+            val canonicalText = psiType.canonicalText
+            val psiClass = PsiUtil.resolveClassInType(psiType)
+            if (psiClass!!.isEnum) {
+                return true
+            }
+            if (baseTextMap.containsKey(canonicalText)) {
+                return true;
+            }
+            if (isJavaStandardClass(psiClass.project, psiClass)) {
+                return true
+            }
+
+            println("不再列表中:$canonicalText")
+            return false
         }
     }
 }

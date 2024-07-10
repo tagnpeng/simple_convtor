@@ -8,6 +8,7 @@ import com.intellij.psi.*
 import com.intellij.psi.impl.source.PsiClassReferenceType
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiUtil
+import com.simple.simpleconvert.ResolveClass
 import com.simple.simpleconvert.SimpleUtil
 import org.apache.commons.lang3.CharUtils
 import java.util.*
@@ -40,6 +41,9 @@ open class CustomizeCreateTargetInfo {
             )
 
             val returnPsiType = method!!.returnType
+            val resolve = resolve(returnPsiType!!, ResolveClass())
+            println(resolve)
+
             if (!method.hasParameters()) {
                 throw Exception("必须需要一个出参");
             }
@@ -247,6 +251,73 @@ open class CustomizeCreateTargetInfo {
 
         private fun isUsedLombokData(psiClass: PsiClass): Boolean {
             return null != psiClass.getAnnotation("lombok.Data")
+        }
+
+        private fun isArr(psiType: PsiType): Boolean {
+            val typeStr: String = SimpleUtil.getType(psiType)
+            if ((typeStr == SimpleUtil.ARR || typeStr == SimpleUtil.COLLECT) && psiType is PsiClassReferenceType) {
+                return true;
+            }
+            return false;
+        }
+
+        /**
+         * 解析PsiType
+         *
+         * @param [psiType] 类型,不支持为基本类型
+         */
+        fun resolve(psiType: PsiType, resolveClass: ResolveClass): ResolveClass {
+            //判断当前类型是否为数组
+            resolveClass.isArr = isArr(psiType)
+
+            //将类型转为具体的类
+            val psiClass = PsiUtil.resolveClassInType(psiType)!!
+
+            //获取类名
+            resolveClass.name = psiClass.name
+            //类型小写
+            resolveClass.lowerName =
+                psiClass.name!!.substring(0, 1).lowercase(Locale.getDefault()) + psiClass.name!!.substring(1)
+
+            //开始遍历当前类的参数
+            if (!SimpleUtil.isBaseType(psiType)) {
+                val fields = psiClass.fields
+                //获取当前类的所有字段
+                val childerList = ArrayList<ResolveClass>()
+                fields.forEach { field ->
+                    //还需要过滤掉一些无用的属性,比如  if ((aSuper.name == "DTO") || (aSuper.name == "Serializable") || (aSuper.name == "Object")) {
+                    if (field.name == "Serializable") {
+                        return@forEach
+                    }
+
+                    val chiller = ResolveClass()
+
+                    //获取属性的类型
+                    val psiClassChiller = PsiUtil.resolveClassInType(field.type)!!
+                    //获取类名
+                    chiller.name = psiClassChiller.name
+                    //类型小写
+                    chiller.lowerName =
+                        psiClassChiller.name!!.substring(0, 1)
+                            .lowercase(Locale.getDefault()) + psiClassChiller.name!!.substring(1)
+                    //是否为数组
+                    chiller.isArr = isArr(field.type)
+                    //参数名称
+                    chiller.paramName = field.name
+                    //获取方法
+                    chiller.getMethod = "get" + field.name.substring(0, 1).uppercase() + field.name.substring(1)
+                    //设置方法
+                    chiller.setMethod = "set" + field.name.substring(0, 1).uppercase() + field.name.substring(1)
+
+                    if (!SimpleUtil.isBaseTypeV2(field.type)) {
+                        //不是基础类型则需要继续解析
+                        resolve(field.type, chiller)
+                    }
+                    childerList.add(chiller);
+                }
+                resolveClass.childer = childerList
+            }
+            return resolveClass;
         }
     }
 }

@@ -5,6 +5,9 @@ open class TargetClass {
      * 类型 LIST or OBJECT
      */
     var type: String? = null
+
+    //是否为数组
+    var isArr: Boolean? = false
     /**
      * 类名
      */
