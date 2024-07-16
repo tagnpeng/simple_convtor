@@ -84,6 +84,7 @@ class CreateMethod {
                 str.append(enterTarget.className).append(" ").append("iterationItem").append("=")
                     .append(enterTarget.paramName).append("[i];")
                 str.append(createAssignment("iterationItem", resultTarget, enterTarget, editInfo))
+                str.append("list.add(iterationItem);")
                 str.append("}")
                 str.append("return list;")
             } else if (resultTarget.type == SimpleUtil.COLLECT) {
@@ -92,6 +93,7 @@ class CreateMethod {
                 str.append("for(").append(enterTarget.className).append(" ").append("iterationItem")
                     .append(":").append(enterTarget.paramName).append("){")
                 str.append(createAssignment("iterationItem", resultTarget, enterTarget, editInfo))
+                str.append("list.add(iterationItem);")
                 str.append("}")
                 str.append("return list;")
             } else {
