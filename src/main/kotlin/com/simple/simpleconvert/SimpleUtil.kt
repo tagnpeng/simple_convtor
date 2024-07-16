@@ -156,6 +156,10 @@ class SimpleUtil {
             if ("java.lang.Object" == canonicalText) {
                 return true
             }
+
+            if ("java.time.LocalDateTime" == canonicalText) {
+                return true
+            }
             val psiClass = PsiUtil.resolveClassInType(psiType)
             if (isJavaStandardClass(psiClass!!.project, psiClass)) {
                 return true
