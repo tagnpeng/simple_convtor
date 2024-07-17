@@ -6,6 +6,4 @@ import com.intellij.psi.PsiClass
 class EditInfo(
     val e: AnActionEvent,
     val psiClass: PsiClass
-) {
-
-}
+)

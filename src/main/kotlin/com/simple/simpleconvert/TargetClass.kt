@@ -6,8 +6,6 @@ open class TargetClass {
      */
     var type: String? = null
 
-    //是否为数组
-    var isArr: Boolean? = false
     /**
      * 类名
      */

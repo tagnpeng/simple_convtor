@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.simple"
-version = "1.4-SNAPSHOT"
+version = "2.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
@@ -19,6 +19,11 @@ intellij {
 
     plugins.set(listOf("com.intellij.java"))
 }
+
+dependencies {
+    implementation("org.apache.commons:commons-text:1.9")
+}
+
 
 tasks {
     // Set the JVM compatibility versions

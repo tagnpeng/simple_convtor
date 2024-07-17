@@ -1,4 +1,4 @@
-package com.simple.demo5
+package com.simple.simpleconvert
 
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
@@ -8,92 +8,100 @@ import com.intellij.psi.*
 import com.intellij.psi.impl.source.PsiClassReferenceType
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.psi.util.PsiUtil
-import com.simple.simpleconvert.ResolveClass
-import com.simple.simpleconvert.SimpleUtil
+import com.simple.demo5.EditInfo
+import com.simple.demo5.TargetClass
+import com.simple.demo5.TargetField
 import org.apache.commons.lang3.CharUtils
 import java.util.*
 import java.util.regex.Pattern
 import java.util.stream.Collectors
 import java.util.stream.Stream
 
+/**
+ * 自定义创建目标信息的工具类
+ */
 open class CustomizeCreateTargetInfo {
     companion object {
+        /**
+         * 根据当前事件获取生成信息
+         */
         fun getGenerateInfo(event: AnActionEvent): EditInfo {
-            val editor: Editor? = CommonDataKeys.EDITOR.getData(event.dataContext)
-            val psiFile: PsiFile? = event.getData(LangDataKeys.PSI_FILE)
-
-            //定位当前类
-            val element = psiFile!!.findElementAt(editor!!.caretModel.offset)
-            val pisClass = PsiTreeUtil.getParentOfType(element, PsiClass::class.java)!!
-
-            //获取解析后的出参和入参
-            return EditInfo(event, pisClass)
+            // 获取编辑器和文件
+            val (editor, psiFile) = getEditorAndPsiFile(event)
+            val element = editor?.caretModel?.let { psiFile?.findElementAt(it.offset) }
+            val psiClass = PsiTreeUtil.getParentOfType(element, PsiClass::class.java)!!
+            return EditInfo(event, psiClass)
         }
 
-
+        /**
+         * 解析方法的返回类型
+         */
         fun resolveReturnType(event: AnActionEvent): TargetClass {
-            val editor: Editor? = CommonDataKeys.EDITOR.getData(event.dataContext)
-            val psiFile: PsiFile? = event.getData(LangDataKeys.PSI_FILE)
-            //定位当前方法
-            val method: PsiMethod? = PsiTreeUtil.getParentOfType(
-                psiFile!!.findElementAt(editor!!.caretModel.offset),
-                PsiMethod::class.java
-            )
+            // 获取编辑器和文件
+            val (editor, psiFile) = getEditorAndPsiFile(event)
+            val method =
+                PsiTreeUtil.getParentOfType(psiFile!!.findElementAt(editor!!.caretModel.offset), PsiMethod::class.java)
+                    ?: throw IllegalStateException("当前位置不在方法中")
 
-            val returnPsiType = method!!.returnType
-            val resolve = resolve(returnPsiType!!, ResolveClass())
-            println(resolve)
+            val returnPsiType = method.returnType ?: throw IllegalStateException("方法没有返回类型")
 
             if (!method.hasParameters()) {
-                throw Exception("必须需要一个出参");
+                throw IllegalArgumentException("方法必须有参数")
             }
+
             var resultPsiClass = PsiUtil.resolveClassInType(returnPsiType)
-            val returnType: String = SimpleUtil.getType(returnPsiType!!)
+            val returnType = SimpleUtil.getType(returnPsiType)
+
+            // 处理返回值为数组或集合的情况
             if ((returnType == SimpleUtil.ARR || returnType == SimpleUtil.COLLECT) && returnPsiType is PsiClassReferenceType) {
                 val optionalPsiType = Arrays.stream(returnPsiType.parameters)
-                    .filter { obj: PsiType? -> Objects.nonNull(obj) }.findFirst()
+                    .filter { Objects.nonNull(it) }.findFirst()
                 if (optionalPsiType.isPresent) {
                     if (SimpleUtil.getType(optionalPsiType.get()) != SimpleUtil.BASE) {
                         resultPsiClass = PsiUtil.resolveClassInType(optionalPsiType.get())
                     } else {
-                        throw Exception("返回值不支持基础类型");
+                        throw IllegalArgumentException("不支持基础类型作为返回值")
                     }
                 }
             }
+
             val targetClass = getTargetClass(resultPsiClass!!, TargetClass(), "set")
-            targetClass.type = returnType;
+            targetClass.type = returnType
             return targetClass
         }
 
+        /**
+         * 解析方法的入参类型
+         */
         fun resolveEnterType(event: AnActionEvent): TargetClass {
-            val editor: Editor? = CommonDataKeys.EDITOR.getData(event.dataContext)
-            val psiFile: PsiFile? = event.getData(LangDataKeys.PSI_FILE)
-            //定位当前方法
-            val method: PsiMethod? = PsiTreeUtil.getParentOfType(
-                psiFile!!.findElementAt(editor!!.caretModel.offset),
-                PsiMethod::class.java
-            )
+            // 获取编辑器和文件
+            val (editor, psiFile) = getEditorAndPsiFile(event)
+            val method =
+                PsiTreeUtil.getParentOfType(psiFile!!.findElementAt(editor!!.caretModel.offset), PsiMethod::class.java)
+                    ?: throw IllegalStateException("当前位置不在方法中")
 
-            val enterPsiType = method!!.parameterList.parameters
+            val enterPsiType = method.parameterList.parameters
             if (enterPsiType.isEmpty()) {
-                throw Exception("必须需要一个入参");
+                throw IllegalArgumentException("方法必须有入参")
             }
+
             val paramType = SimpleUtil.getType(enterPsiType[0].type)
             var paramPsiClass = PsiUtil.resolveClassInType(enterPsiType[0].type)
-            if ((paramType == SimpleUtil.ARR || paramType == SimpleUtil.COLLECT) && enterPsiType[0]
-                    .type is PsiClassReferenceType
-            ) {
+
+            // 处理入参为数组或集合的情况
+            if ((paramType == SimpleUtil.ARR || paramType == SimpleUtil.COLLECT) && enterPsiType[0].type is PsiClassReferenceType) {
                 val psiClassReferenceType = enterPsiType[0].type as PsiClassReferenceType
                 val optionalPsiType = Arrays.stream(psiClassReferenceType.parameters)
-                    .filter { obj: PsiType? -> Objects.nonNull(obj) }.findFirst()
+                    .filter { Objects.nonNull(it) }.findFirst()
                 if (optionalPsiType.isPresent) {
                     if (SimpleUtil.getType(optionalPsiType.get()) != SimpleUtil.BASE) {
                         paramPsiClass = PsiUtil.resolveClassInType(optionalPsiType.get())
                     } else {
-                        throw Exception("不支持基础类型");
+                        throw IllegalArgumentException("不支持基础类型作为入参")
                     }
                 }
             }
+
             val clazz = TargetClass()
             clazz.paramName = enterPsiType[0].name
             val targetClass = getTargetClass(paramPsiClass!!, clazz, "get")
@@ -102,27 +110,24 @@ open class CustomizeCreateTargetInfo {
         }
 
         /**
-         * 获取目标class信息
-         * @param [psiClass]
-         * @param [aClass]
-         * @param [typeStr] 是提取get还是set
-         * @return [Class<*>]
+         * 获取目标class信息，包括字段、方法等
          */
-        @Throws(java.lang.Exception::class)
+        @Throws(Exception::class)
         fun getTargetClass(psiClass: PsiClass, aClass: TargetClass, typeStr: String): TargetClass {
             val psiClassFields = Stream.of(*psiClass.fields).collect(Collectors.toList())
-            //拿到当前类名称
+
+            // 设置类名和参数名
             aClass.className = psiClass.name
             if (aClass.paramName == null) {
                 aClass.paramName =
-                    aClass.className?.substring(0, 1)!!.lowercase(Locale.getDefault()) + aClass.className!!.substring(1)
+                    aClass.className?.substring(0, 1)?.lowercase(Locale.getDefault()) + aClass.className?.substring(1)
             }
 
-            //判断当前类是否还有超类
+            // 处理超类的字段
             val supers = psiClass.supers
             if (supers.isNotEmpty()) {
                 for (aSuper in supers) {
-                    //todo 可以提取特征将不需要管的超类过滤
+                    // 过滤不需要处理的超类
                     if (aSuper.name == "DTO"
                         || aSuper.name == "Serializable"
                         || aSuper.name == "Object"
@@ -135,39 +140,46 @@ open class CustomizeCreateTargetInfo {
                 }
             }
 
-            //获取当前类所有属性的set或者get方法
+            // 获取字段的get或set方法映射关系
             val methods: Map<String, String> = getMethods(psiClass, typeStr)
-            val fields: MutableList<TargetField> = ArrayList<TargetField>()
+            val fields: MutableList<TargetField> = ArrayList()
             for (psiField in psiClassFields) {
+                // 过滤静态字段和不必要的字段
                 if (SimpleUtil.isStaticMethodOrField(psiField) || psiField.name == "serialVersionUID") {
                     continue
                 }
                 val field = TargetField()
                 field.fieldName = psiField.name
 
+                // 解析字段的类型和相关信息
                 val psiType = psiField.type
                 val fieldPsiClass = PsiUtil.resolveClassInType(psiType)
                 val type = SimpleUtil.getType(psiType)
+
+                // 检查字段是否有对应的get或set方法
                 if (!methods.containsKey(psiField.name)) {
-                    throw Exception(psiClass.name + "." + psiField.name + typeStr + "方法命名不支持")
+                    throw IllegalArgumentException("${psiClass.name}.${psiField.name}$typeStr 方法命名不支持")
                 }
+
                 field.method = methods[psiField.name]
                 field.type = type
                 field.psiType = psiType
                 field.psiClass = fieldPsiClass
-                //当前属性可能还存在对象或者数组等不是基础类型的,则需要继续深层获取信息
+
+                // 处理复杂类型字段（对象或数组）
                 if (type == SimpleUtil.OBJECT || type == SimpleUtil.ARR) {
                     val sonFieldPsiClass = TargetClass()
-                    sonFieldPsiClass.type = type;
+                    sonFieldPsiClass.type = type
                     getTargetClass(fieldPsiClass!!, sonFieldPsiClass, typeStr)
                     field.targetClass = sonFieldPsiClass
                 }
-                //属性为数组需要判断泛型
+
+                // 处理集合类型字段
                 if (type == SimpleUtil.COLLECT && psiType is PsiClassReferenceType) {
                     val sonFieldPsiClass = TargetClass()
-                    sonFieldPsiClass.type = type;
+                    sonFieldPsiClass.type = type
                     val optionalPsiType = Arrays.stream(psiType.parameters)
-                        .filter { obj: PsiType? -> Objects.nonNull(obj) }.findFirst()
+                        .filter { Objects.nonNull(it) }.findFirst()
                     if (optionalPsiType.isPresent) {
                         if (SimpleUtil.getType(optionalPsiType.get()) != SimpleUtil.BASE) {
                             getTargetClass(
@@ -179,6 +191,7 @@ open class CustomizeCreateTargetInfo {
                         }
                     }
                 }
+
                 fields.add(field)
             }
             aClass.targetField = fields
@@ -186,33 +199,33 @@ open class CustomizeCreateTargetInfo {
         }
 
         /**
-         * 提取所有方法
-         *
-         * @param [psiClass] 当前类
-         * @param [typeStr] 提取set还是get方法
-         * @return [Map<String, String>]
+         * 获取字段和方法的映射关系
          */
         private fun getMethods(psiClass: PsiClass, typeStr: String): Map<String, String> {
             val fieldMethod: MutableMap<String, String> = HashMap()
-            //拿到所有超类和当前类之后遍历
+
+            // 获取所有超类和当前类，然后遍历
             val supers = Stream.of(*psiClass.supers).collect(Collectors.toList())
-            supers!!.add(psiClass)
-            if (supers.size > 0) {
+            supers.add(psiClass)
+
+            if (supers.isNotEmpty()) {
                 for (aSuper in supers) {
-                    //todo 可以提取特征将不需要管的超类过滤
+                    // 过滤不需要处理的超类
                     if ((aSuper.name == "DTO") || (aSuper.name == "Serializable") || (aSuper.name == "Object")) {
                         continue
                     }
-                    //遍历所有字段
+
+                    // 遍历所有字段
                     for (field in aSuper.fields) {
-                        //遍历所有方法匹配字段,一定需要符合标准的
+                        // 遍历所有方法匹配字段，确保符合标准的
                         for (psiMethod in aSuper.methods) {
-                            //手动拼接get或者set方法
-                            val cs: CharArray = field.name.toCharArray()
+                            // 手动拼接get或者set方法
+                            val cs = field.name.toCharArray()
                             if (!CharUtils.isAsciiAlphaUpper(cs[0])) {
                                 cs[0] = cs[0] - 32
                             }
-                            //判断拼接后的放在是否在类中存在,或者类中的方法本身就存在
+
+                            // 判断拼接后的方法名是否在类中存在，或者类中的方法本身就存在
                             if ((typeStr + String(cs)) == psiMethod.name || Pattern.matches(
                                     typeStr + String(cs) + "\\w",
                                     psiMethod.name
@@ -222,24 +235,30 @@ open class CustomizeCreateTargetInfo {
                             }
                         }
                     }
-                    //如果使用了lombok注解
+
+                    // 如果使用了lombok注解
                     if (isUsedLombokData(aSuper)) {
                         val p = Pattern.compile("static.*?final|final.*?static")
                         val fields = aSuper.fields
+
                         for (psiField in fields) {
                             val context = psiField.nameIdentifier.context ?: continue
                             val fieldVal = context.text
+
                             // serialVersionUID 判断
                             if (fieldVal.contains("serialVersionUID")) {
                                 continue
                             }
+
                             // static final 常量判断过滤
                             val matcher = p.matcher(fieldVal)
                             if (matcher.find()) {
                                 continue
                             }
+
                             val name = psiField.nameIdentifier.text
-                            //直接拼接
+
+                            // 直接拼接
                             fieldMethod[name] =
                                 typeStr + name.substring(0, 1).uppercase(Locale.getDefault()) + name.substring(1)
                         }
@@ -249,75 +268,20 @@ open class CustomizeCreateTargetInfo {
             return fieldMethod
         }
 
+        /**
+         * 判断是否使用了Lombok的@Data注解
+         */
         private fun isUsedLombokData(psiClass: PsiClass): Boolean {
             return null != psiClass.getAnnotation("lombok.Data")
         }
 
-        private fun isArr(psiType: PsiType): Boolean {
-            val typeStr: String = SimpleUtil.getType(psiType)
-            if ((typeStr == SimpleUtil.ARR || typeStr == SimpleUtil.COLLECT) && psiType is PsiClassReferenceType) {
-                return true;
-            }
-            return false;
-        }
-
         /**
-         * 解析PsiType
-         *
-         * @param [psiType] 类型,不支持为基本类型
+         * 获取编辑器和文件对象
          */
-        fun resolve(psiType: PsiType, resolveClass: ResolveClass): ResolveClass {
-            //判断当前类型是否为数组
-            resolveClass.isArr = isArr(psiType)
-
-            //将类型转为具体的类
-            val psiClass = PsiUtil.resolveClassInType(psiType)!!
-
-            //获取类名
-            resolveClass.name = psiClass.name
-            //类型小写
-            resolveClass.lowerName =
-                psiClass.name!!.substring(0, 1).lowercase(Locale.getDefault()) + psiClass.name!!.substring(1)
-
-            //开始遍历当前类的参数
-            if (!SimpleUtil.isBaseType(psiType)) {
-                val fields = psiClass.fields
-                //获取当前类的所有字段
-                val childerList = ArrayList<ResolveClass>()
-                fields.forEach { field ->
-                    //还需要过滤掉一些无用的属性,比如  if ((aSuper.name == "DTO") || (aSuper.name == "Serializable") || (aSuper.name == "Object")) {
-                    if (field.name == "Serializable") {
-                        return@forEach
-                    }
-
-                    val chiller = ResolveClass()
-
-                    //获取属性的类型
-                    val psiClassChiller = PsiUtil.resolveClassInType(field.type)!!
-                    //获取类名
-                    chiller.name = psiClassChiller.name
-                    //类型小写
-                    chiller.lowerName =
-                        psiClassChiller.name!!.substring(0, 1)
-                            .lowercase(Locale.getDefault()) + psiClassChiller.name!!.substring(1)
-                    //是否为数组
-                    chiller.isArr = isArr(field.type)
-                    //参数名称
-                    chiller.paramName = field.name
-                    //获取方法
-                    chiller.getMethod = "get" + field.name.substring(0, 1).uppercase() + field.name.substring(1)
-                    //设置方法
-                    chiller.setMethod = "set" + field.name.substring(0, 1).uppercase() + field.name.substring(1)
-
-                    if (!SimpleUtil.isBaseTypeV2(field.type)) {
-                        //不是基础类型则需要继续解析
-                        resolve(field.type, chiller)
-                    }
-                    childerList.add(chiller);
-                }
-                resolveClass.childer = childerList
-            }
-            return resolveClass;
+        private fun getEditorAndPsiFile(event: AnActionEvent): Pair<Editor?, PsiFile?> {
+            val editor = CommonDataKeys.EDITOR.getData(event.dataContext)
+            val psiFile = event.getData(LangDataKeys.PSI_FILE)
+            return Pair(editor, psiFile)
         }
     }
 }

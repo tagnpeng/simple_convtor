@@ -7,7 +7,8 @@ import com.intellij.openapi.actionSystem.LangDataKeys
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.psi.codeStyle.CodeStyleManager
-import com.simple.demo5.CreateMethod.Companion.createMethodStr
+import com.simple.simpleconvert.CreateMethod.Companion.createMethodStr
+import com.simple.simpleconvert.CustomizeCreateTargetInfo
 
 
 class ConvertAction : AnAction() {
