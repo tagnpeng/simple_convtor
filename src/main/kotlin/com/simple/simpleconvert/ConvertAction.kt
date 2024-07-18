@@ -21,8 +21,11 @@ class ConvertAction : AnAction() {
                 val document = editor.document
                 var lineNumberCurrent = document.getLineNumber(editor.caretModel.offset)
                 val startOffset: Int = document.getLineStartOffset(lineNumberCurrent)
+                //生成转换代码
                 val codeStr = createMethodStr(
+                    //获取出参
                     CustomizeCreateTargetInfo.resolveReturnType(e),
+                    //获取入参
                     CustomizeCreateTargetInfo.resolveEnterType(e),
                     CustomizeCreateTargetInfo.getGenerateInfo(e)
                 )
