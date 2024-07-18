@@ -44,20 +44,10 @@ Win默认快捷键为ctrl shift L<br>
 1. 克隆此项目到本地：
 
    ```sh
-   git clone https://github.com/yourusername/SimpleConvert.git
+   git clone https://github.com/tagnpeng/simple_convtor.git
    ```
 
-2. 使用 IntelliJ IDEA 打开项目。
-
-3. 构建项目并运行。
-
-## 使用方法
-
-1. 在 IntelliJ IDEA 中安装并启用插件。
-
-2. 打开包含需要生成代码转换逻辑的 Java 类。
-
-3. 右键点击编辑器并选择相关的生成操作，即可自动生成代码转换逻辑。
+2. 支持java17
 
 ## 主要功能
 
