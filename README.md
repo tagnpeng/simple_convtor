@@ -21,24 +21,6 @@ Win默认快捷键为ctrl shift L<br>
 - 支持处理数组和集合类型。
 - 支持 Lombok 注解的解析。
 
-## 目录结构
-
-```
-.
-├── src
-│   ├── main
-│   │   ├── java
-│   │   │   ├── com
-│   │   │   │   ├── simple
-│   │   │   │   │   ├── simpleconvert
-│   │   │   │   │   │   ├── CustomizeCreateTargetInfo.kt
-│   │   │   │   │   │   ├── SimpleUtil.kt
-│   │   ├── resources
-│   │   ├── META-INF
-│   │   │   ├── plugin.xml
-├── README.md
-```
-
 ## 安装
 
 1. 克隆此项目到本地：
