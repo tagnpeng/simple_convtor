@@ -167,7 +167,7 @@ open class CustomizeCreateTargetInfo {
                 field.psiClass = fieldPsiClass
 
                 // 处理复杂类型字段（对象或数组）
-                if (type == SimpleUtil.OBJECT || type == SimpleUtil.ARR) {
+                if ((type == SimpleUtil.OBJECT || type == SimpleUtil.ARR) && fieldPsiClass != null) {
                     val sonFieldPsiClass = TargetClass()
                     sonFieldPsiClass.type = type
                     getTargetClass(fieldPsiClass!!, sonFieldPsiClass, typeStr)

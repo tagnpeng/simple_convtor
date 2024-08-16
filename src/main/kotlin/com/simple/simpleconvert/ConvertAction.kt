@@ -9,11 +9,13 @@ import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.psi.codeStyle.CodeStyleManager
 import com.simple.simpleconvert.CreateMethod.Companion.createMethodStr
 import com.simple.simpleconvert.CustomizeCreateTargetInfo
+import java.util.logging.Logger
 
 
 class ConvertAction : AnAction() {
 
     override fun actionPerformed(e: AnActionEvent) {
+        val LOG: Logger = Logger.getLogger("")
         try {
             val psiFile = e.getData(LangDataKeys.PSI_FILE)
             val editor = CommonDataKeys.EDITOR.getData(e.dataContext)
@@ -44,6 +46,7 @@ class ConvertAction : AnAction() {
             JBPopupFactory.getInstance()
                 .createMessage("出现错误:${e.message}")
                 .showInFocusCenter();
+            throw e
         }
     }
 }

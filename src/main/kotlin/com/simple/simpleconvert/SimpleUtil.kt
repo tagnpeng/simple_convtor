@@ -65,8 +65,9 @@ class SimpleUtil {
          */
         fun isBaseType(psiType: PsiType): Boolean {
             val canonicalText = psiType.canonicalText
-            return baseTextMap.containsKey(canonicalText) || (PsiUtil.resolveClassInType(psiType)
-                ?.let { isJavaStandardClass(it.project, it) } ?: false) || PsiUtil.resolveClassInType(psiType)!!.isEnum
+            val resolveClassInType = PsiUtil.resolveClassInType(psiType)
+            return baseTextMap.containsKey(canonicalText) || (resolveClassInType
+                ?.let { isJavaStandardClass(it.project, it) } ?: false) || resolveClassInType!!.isEnum
         }
 
         /**
@@ -117,6 +118,34 @@ class SimpleUtil {
             "java.util.Date" to 1,
             "java.lang.Object" to 1,
             "java.time.LocalDateTime" to 1,
+            "int" to 1,
+            "long" to 1,
+            "double" to 1,
+            "float" to 1,
+            "boolean" to 1,
+            "byte" to 1,
+            "short" to 1,
+            "char" to 1,
+            "void" to 1,
+            "java.lang.String[]" to 1,
+            "java.lang.Boolean[]" to 1,
+            "java.lang.Long[]" to 1,
+            "java.lang.Double[]" to 1,
+            "java.lang.Float[]" to 1,
+            "java.lang.Integer[]" to 1,
+            "java.lang.Byte[]" to 1,
+            "java.lang.Short[]" to 1,
+            "java.lang.Class[]" to 1,
+            "java.math.BigDecimal[]" to 1,
+            "java.util.Date[]" to 1,
+            "java.lang.Object[]" to 1,
+            "java.time.LocalDateTime[]" to 1,
+            "int[]" to 1,
+            "long[]" to 1,
+            "double[]" to 1,
+            "float[]" to 1,
+            "boolean[]" to 1,
+            "byte[]" to 1
         )
     }
 }
