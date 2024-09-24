@@ -21,9 +21,9 @@ class SimpleUtil {
          */
         fun getType(psiType: PsiType): String {
             return when {
-                isCollection(psiType) -> COLLECT
-                isArray(psiType) -> ARR
                 isBaseType(psiType) -> BASE
+                isArray(psiType) -> ARR
+                isCollection(psiType) -> COLLECT
                 else -> OBJECT
             }
         }
