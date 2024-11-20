@@ -156,10 +156,10 @@ open class CustomizeCreateTargetInfo {
                 val fieldPsiClass = PsiUtil.resolveClassInType(psiType)
                 val type = SimpleUtil.getType(psiType)
 
-                // 检查字段是否有对应的get或set方法
-                if (!methods.containsKey(psiField.name)) {
-                    throw IllegalArgumentException("${psiClass.name}.${psiField.name}$typeStr 方法命名不支持")
-                }
+                // 检查字段是否有对应的get或set方法 todo 有bug,没有检查继承的方法
+//                if (!methods.containsKey(psiField.name)) {
+//                    throw IllegalArgumentException("${psiClass.name}.${psiField.name}$typeStr 方法命名不支持")
+//                }
 
                 field.method = methods[psiField.name]
                 field.type = type
@@ -170,7 +170,7 @@ open class CustomizeCreateTargetInfo {
                 if ((type == SimpleUtil.OBJECT || type == SimpleUtil.ARR) && fieldPsiClass != null) {
                     val sonFieldPsiClass = TargetClass()
                     sonFieldPsiClass.type = type
-                    getTargetClass(fieldPsiClass!!, sonFieldPsiClass, typeStr)
+                    getTargetClass(fieldPsiClass, sonFieldPsiClass, typeStr)
                     field.targetClass = sonFieldPsiClass
                 }
 
